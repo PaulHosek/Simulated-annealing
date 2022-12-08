@@ -11,7 +11,10 @@ def plot_points(radius, points):
     
     fig, ax = plt.subplots(1)
     ax.plot(a, b, color='black')
-    for p in points:
-        ax.scatter(p[0], p[1], color='blue')
+    # plotpoints = []
+    # for p in points:
+    scatter = ax.scatter(points[:,0], points[:,1], color='blue')
     ax.set_aspect(1)
-    plt.show()
+    # plt.show()
+
+    return fig, ax, scatter, 
