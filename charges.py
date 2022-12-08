@@ -1,5 +1,6 @@
 ## Imports
 import numpy as np
+import numba as nb
 
 # Class definition
 
@@ -8,19 +9,30 @@ class Charges():
     """
 
     def __init__(self, n_particles, radius):
-        self.particles = self.initialise_points()
+        self.particles = self.initialise_points(n_particles, radius)
 
     
     def initialise_points(self, n_particles, radius):
+        """ Generate n_particles within a circle 
         """
-        """
-        pass 
+        points = []
+        for n in range(n_particles):
+            # random angle
+            alpha = 2 * np.pi * np.random.random()
+            r = radius * np.sqrt(np.random.random())
+            # calculating coordinates
+            x = r * np.cos(alpha)
+            y = r * np.sin(alpha)
+            points.append([x,y])
+
+        return np.array(points)
 
 
     def evaluate_constellation():
         pass
 
-
+    
+    @nb.vectorize
     def calculate_euclidean_distance():
         pass
 
