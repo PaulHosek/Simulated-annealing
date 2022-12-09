@@ -1,10 +1,12 @@
 ## Imports
+import charges
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 import numpy as np
 
 ## Functions
 
-def plot_points(radius, points):
+def plot_points(radius, points, ch):
     theta = np.linspace(0, 2 * np.pi, 150)
     a = radius * np.cos(theta)
     b = radius * np.sin(theta)
@@ -17,4 +19,14 @@ def plot_points(radius, points):
     ax.set_aspect(1)
     # plt.show()
 
-    return fig, ax, scatter, 
+    def animate(frame_num):
+        for p in range(ch.n_particles):
+            ch.move_particle_random(p, 0.1)
+        # test.append(ch.particles)
+        scatter.set_offsets(ch.particles[:,0], ch.particles[:,1])
+        return scatter
+
+    anim = FuncAnimation(fig, animate, frames=100, interval=5)
+    plt.show()
+
+    # return fig, ax, scatter, 
