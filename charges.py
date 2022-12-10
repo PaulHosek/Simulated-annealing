@@ -14,14 +14,14 @@ class Charges():
     """ Class that handles charge particles and the simulated annealing algorithm
     """
 
-    def __init__(self, n_particles, radius, step_size=0.01):
+    def __init__(self, n_particles, radius=1, step_size=0.01):
         self.n_particles = n_particles
         self.radius = radius
         self.particles = self.generate_points(n_particles, radius)
         self.pot_energy = self.evaluate_configuration()
         self.step_size = step_size
 
-    def generate_points(self, n_particles, radius, seed=None):
+    def generate_points(self, n_particles, radius=1, seed=None):
         """ Generate n_particles within a circle 
         """
         rng = np.random.default_rng(seed)
@@ -110,9 +110,10 @@ class Charges():
         4. If worse accept depending on temperature
         p = index of particle
         """
+
         rng = np.random.default_rng(None)
         if single_rand_particle:
-            p = rng.integers(0, len(self.particles) + 1)
+            p = rng.integers(0, len(self.particles))
         # save olf state of the system
         last_particles = np.copy(self.particles)
         # do SA move
@@ -123,6 +124,7 @@ class Charges():
         if new_pot_energy <= self.pot_energy:
             self.pot_energy = new_pot_energy
         # accept move is chance of acceptance is greater based on current temperature
+
         elif np.exp((self.pot_energy - new_pot_energy) / cur_temp) >= rng.random():
             self.pot_energy = new_pot_energy
         # reject move
@@ -148,7 +150,7 @@ class Charges():
         fname = f"{len(self.particles)}_{schedule}_{iterations}"
         if not os.path.exists('logged_data'):
             os.makedirs("logged_data")
-        my_file = os.Path(os.path.join("logged_data", fname + ".csv"))
+        my_file = Path(os.path.join("logged_data", fname + ".csv"))
 
         if not my_file.is_file():
             with open(os.path.join("logged_data", fname + ".csv"), "w+") as f:
