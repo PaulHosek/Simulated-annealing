@@ -47,19 +47,6 @@ class Charges():
 
         return total
 
-    def evaluate_configuration_fast(self):
-        """No idea if this is acc faster."""
-
-        # generate combinations
-        m, n = self.particles.shape
-        comb = np.zeros((m, m, n + n), dtype=int)
-        comb[:, :, :n] = self.particles[:, None, :]
-        comb[:, :, n:] = self.particles
-        comb.shape = (m * m, -1)  # shape is 4 columns w len(particles) rows
-        # now we also get p1 -p1 combinations
-        res = 1 / self.euclidean(comb[:, :2], comb[:, 2:])
-        return np.sum(res)
-
     @staticmethod
     def euclidean(p1, p2):
         """ Compute the euclidean distance between two points
@@ -218,7 +205,7 @@ class Charges():
         # find force vector
         # https://www.kristakingmath.com/blog/magnitude-and-angle-of-the-resultant-force
         # https://www.dummies.com/article/academics-the-arts/science/physics/how-to-find-the-angle-and-magnitude-of-a-vector-173966/
-        # WTF am i doing
+        # WTF am I doing
         force_dirs = np.radians(-np.degrees(np.arctan(deltas_y / deltas_x))) + np.pi / 2
         forces = force_f(self.euclidean_vec(comb))
         res = np.vstack(np.sin(force_dirs), np.cos(force_dirs)).T * forces
