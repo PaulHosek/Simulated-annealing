@@ -76,7 +76,7 @@ class Charges():
         # now we also get p1 -p1 combinations, but
         # their inter-particle distance is 0, so we can ignore that fact
         dists = self.euclidean_vec(comb)
-        return 1/ np.sum(1 /dists[dists != 0])
+        return 1 / np.sum(dists[dists != 0])
 
     def check_in_circle(self, p):
         """ Check if point p is within the circle
@@ -101,12 +101,12 @@ class Charges():
         else:
             return 0
 
-    def move_particle_random_new(self,p):
+    def move_particle_random_new(self, p):
         rng = np.random.default_rng(None)
         delta = rng.uniform(-self.step_size, self.step_size, 2)
-        new_loc = self.particles[p,:] + delta
+        new_loc = self.particles[p, :] + delta
         if self.check_in_circle(new_loc):
-            self.particles[p,:] = new_loc
+            self.particles[p, :] = new_loc
             return 1
         else:
             return 0
@@ -130,12 +130,8 @@ class Charges():
         # do SA move
         self.move_particle_random(p)
         # Evaluate new configuration
-        # print(self.evaluate_configuration())
-        # print(self.evaluate_configuration_fast())
         new_pot_energy = self.evaluate_configuration_fast()
         # accept if better independent of temp
-        # print(np.exp((self.pot_energy - new_pot_energy) / cur_temp))
-        print(self.pot_energy)
         if new_pot_energy <= self.pot_energy:
             self.pot_energy = new_pot_energy
         # accept move is chance of acceptance is greater based on current temperature
@@ -154,11 +150,11 @@ class Charges():
             return np.linspace(high_temp, low_temp, n_temps)
         elif schedule == "exponential_even_spacing":
             return np.geomspace(high_temp, low_temp, n_temps)
-        elif schedule == "exponential_0.01":
-            return np.exp(-np.arange(low_temp, high_temp) * 0.001) * high_temp
+        elif schedule == "exponential_0.003":
+            return np.exp(-np.arange(0, n_temps) * 30 / n_temps) * high_temp
         else:
             raise TypeError("%s is not a valid cooling schedule."
-                            " Try linear, exponential_even_spacing or exponential_0.01" % schedule)
+                            " Try linear, exponential_even_spacing or exponential_0.003" % schedule)
 
     def write_data(self, schedule, iterations, all_energies):
         fname = f"{len(self.particles)}_{schedule}_{iterations}"
@@ -187,6 +183,7 @@ class Charges():
             low_temp += 0.01
         all_temps = self.generate_temperature_list(low_temp, high_temp,
                                                    iterations, schedule)
+
         all_energies = np.empty(iterations * nr_points)
         p_idx = 0
         for cur_temp in all_temps:
