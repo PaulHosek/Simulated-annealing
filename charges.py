@@ -76,7 +76,7 @@ class Charges():
         # now we also get p1 -p1 combinations, but
         # their inter-particle distance is 0, so we can ignore that fact
         dists = self.euclidean_vec(comb)
-        return np.sum(1 /dists[dists != 0])
+        return 1/ np.sum(1 /dists[dists != 0])
 
     def check_in_circle(self, p):
         """ Check if point p is within the circle
@@ -128,7 +128,7 @@ class Charges():
         last_particles = np.copy(self.particles)
 
         # do SA move
-        self.move_particle_random_new(p)
+        self.move_particle_random(p)
         # Evaluate new configuration
         # print(self.evaluate_configuration())
         # print(self.evaluate_configuration_fast())
