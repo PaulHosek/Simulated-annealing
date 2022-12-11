@@ -59,8 +59,8 @@ class Charges():
          np array of all point combinations: 4 columns with n rows.
         """
 
-        return np.sqrt((combs[:, 0] - combs[:, 1]) ** 2 +
-                       (combs[:, 2] - combs[:, 3]) ** 2)
+        return np.sqrt((combs[:, 0] - combs[:, 2]) ** 2 +
+                       (combs[:, 1] - combs[:, 3]) ** 2)
         # return np.linalg.norm(p2 - p1)
 
     def evaluate_configuration_fast(self):
@@ -68,15 +68,15 @@ class Charges():
 
         # generate combinations with np broadcasting
         m, n = self.particles.shape
-        comb = np.zeros((m, m, n + n), dtype=int)
+        comb = np.zeros((m, m, n + n), dtype=float)
         comb[:, :, :n] = self.particles[:, None, :]
         comb[:, :, n:] = self.particles
         comb.shape = (m * m, -1)  # shape is 4 columns w len(particles) rows
 
         # now we also get p1 -p1 combinations, but
         # their inter-particle distance is 0, so we can ignore that fact
-
-        return 1 / np.sum(self.euclidean_vec(comb))
+        dists = self.euclidean_vec(comb)
+        return np.sum(1 /dists[dists != 0])
 
     def check_in_circle(self, p):
         """ Check if point p is within the circle
@@ -101,6 +101,16 @@ class Charges():
         else:
             return 0
 
+    def move_particle_random_new(self,p):
+        rng = np.random.default_rng(None)
+        delta = rng.uniform(-self.step_size, self.step_size, 2)
+        new_loc = self.particles[p,:] + delta
+        if self.check_in_circle(new_loc):
+            self.particles[p,:] = new_loc
+            return 1
+        else:
+            return 0
+
     def do_SA_step(self, p, cur_temp, single_rand_particle):
         """
         Does a single SA step:
@@ -116,15 +126,19 @@ class Charges():
             p = rng.integers(0, len(self.particles))
         # save olf state of the system
         last_particles = np.copy(self.particles)
+
         # do SA move
-        self.move_particle_random(p)
+        self.move_particle_random_new(p)
         # Evaluate new configuration
-        new_pot_energy = self.evaluate_configuration()
+        # print(self.evaluate_configuration())
+        # print(self.evaluate_configuration_fast())
+        new_pot_energy = self.evaluate_configuration_fast()
         # accept if better independent of temp
+        # print(np.exp((self.pot_energy - new_pot_energy) / cur_temp))
+        print(self.pot_energy)
         if new_pot_energy <= self.pot_energy:
             self.pot_energy = new_pot_energy
         # accept move is chance of acceptance is greater based on current temperature
-
         elif np.exp((self.pot_energy - new_pot_energy) / cur_temp) >= rng.random():
             self.pot_energy = new_pot_energy
         # reject move
@@ -155,7 +169,7 @@ class Charges():
         if not my_file.is_file():
             with open(os.path.join("logged_data", fname + ".csv"), "w+") as f:
                 wr = csv.writer(f)
-                wr.writerow(["all_energies", "_", "_", "_"])
+                wr.writerow(["all_energies"])
 
         # log the data
         with open(os.path.join("logged_data", fname + ".csv"), "a") as f:
@@ -169,8 +183,10 @@ class Charges():
         nr_points = len(self.particles)
         if single_rand_particle:
             nr_points = 1
-
-        all_temps = self.generate_temperature_list(low_temp, high_temp, iterations, schedule)
+        if low_temp == 0:
+            low_temp += 0.01
+        all_temps = self.generate_temperature_list(low_temp, high_temp,
+                                                   iterations, schedule)
         all_energies = np.empty(iterations * nr_points)
         p_idx = 0
         for cur_temp in all_temps:
@@ -196,7 +212,7 @@ class Charges():
         # generate combinations with np broadcasting
         force_f = lambda rij: rij / np.abs(rij ** 3)
         m, n = self.particles.shape
-        comb = np.zeros((m, m, n + n), dtype=int)
+        comb = np.zeros((m, m, n + n), dtype=float)
         comb[:, :, :n] = self.particles[:, None, :]
         comb[:, :, n:] = self.particles
         comb.shape = (m * m, -1)
