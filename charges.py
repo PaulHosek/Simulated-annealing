@@ -195,42 +195,12 @@ class Charges():
         self.write_data(schedule, iterations, all_energies)
         return self.particles
 
+
     def total_force_on_particle(self, p):
-        """
-        Returns total force and its direction
-        p is particle index
-        """
-
-        ##### NOT FINISHED YET #######
-        # 1. write this so it only iterates over single_particle x all_others
-        # 2. Make sure it returns something sensible
-        # 3. Make sure it acc works
-
-        # generate combinations with np broadcasting
-        force_f = lambda rij: rij / np.abs(rij ** 3)
-        m, n = self.particles.shape
-        comb = np.zeros((m, m, n + n), dtype=float)
-        comb[:, :, :n] = self.particles[:, None, :]
-        comb[:, :, n:] = self.particles
-        comb.shape = (m * m, -1)
-
-        deltas_x = np.abs(comb[0] - comb[2])
-        deltas_y = np.abs(comb[1] - comb[3])
-
-        # find force vector
-        # https://www.kristakingmath.com/blog/magnitude-and-angle-of-the-resultant-force
-        # https://www.dummies.com/article/academics-the-arts/science/physics/how-to-find-the-angle-and-magnitude-of-a-vector-173966/
-        # WTF am I doing
-        force_dirs = np.radians(-np.degrees(np.arctan(deltas_y / deltas_x))) + np.pi / 2
-        forces = force_f(self.euclidean_vec(comb))
-        res = np.vstack(np.sin(force_dirs), np.cos(force_dirs)).T * forces
-        return res, force_dirs, forces
-
-def total_force_on_particle_fast(self, p):
-    F = np.zeros(2)
-    for particle in range(self.n_particles):
-        if particle != p:
-            dir = self.particles[particle] - self.particles[p]
-            dist = self.euclidean(self.particles[particle], self.particles[p])
-            F += dir / (dist ** 3)
-    return F / (self.n_particles - 1)
+        F = np.zeros(2)
+        for particle in range(self.n_particles):
+            if particle != p:
+                dir = self.particles[p] - self.particles[particle]
+                dist = self.euclidean(self.particles[particle], self.particles[p])
+                F += dir / (dist ** 3)
+        return F / (self.n_particles - 1)

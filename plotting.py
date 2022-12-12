@@ -6,7 +6,7 @@ import numpy as np
 
 ## Functions
 
-def plot_points(radius, points, ch):
+def plot_points(radius, points, ch, force):
     theta = np.linspace(0, 2 * np.pi, 150)
     a = radius * np.cos(theta)
     b = radius * np.sin(theta)
@@ -15,6 +15,12 @@ def plot_points(radius, points, ch):
     ax.plot(a, b, color='black')
     scatter, = ax.plot(points[:,0], points[:,1], 'bo')
     ax.set_aspect(1)
+
+    if force:
+        for p in range(ch.n_particles):
+            x,y = ch.particles[p]
+            force_x, force_y = ch.total_force_on_particle(p)
+            plt.quiver(x, y, force_x, force_y)
 
     # def animate(frame_num):
     #     for p in range(ch.n_particles):
