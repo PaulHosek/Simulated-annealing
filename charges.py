@@ -7,6 +7,8 @@ import os
 import csv
 from pathlib import Path
 
+import pandas
+import pandas as pd
 
 # Class definition
 
@@ -21,10 +23,10 @@ class Charges():
         self.pot_energy = self.evaluate_configuration()
         self.step_size = step_size
 
-    def generate_points(self, radius=1, seed=None):
+    def generate_points(self, radius=1):
         """ Generate n_particles within a circle 
         """
-        rng = np.random.default_rng(seed)
+        rng = np.random.default_rng(None)
         points = []
         for n in range(self.n_particles):
             # random angle and distance from center
@@ -93,7 +95,7 @@ class Charges():
         """ Tries to move particle p (index for particles) by stepsize
             returns 1 if success, 0 if failed
         """
-        step = self.generate_points(1, self.step_size)[0]
+        step = self.generate_points(1)[0]
         particle = self.particles[p]
         if self.check_in_circle(particle + step):
             self.particles[p] = particle + step
@@ -130,7 +132,7 @@ class Charges():
         # do SA move
         self.move_particle_random(p)
         # Evaluate new configuration
-        new_pot_energy = self.evaluate_configuration_fast()
+        new_pot_energy = self.evaluate_configuration()
         # accept if better independent of temp
         if new_pot_energy <= self.pot_energy:
             self.pot_energy = new_pot_energy
@@ -156,8 +158,8 @@ class Charges():
             raise TypeError("%s is not a valid cooling schedule."
                             " Try linear, exponential_even_spacing or exponential_0.003" % schedule)
 
-    def write_data(self, schedule, iterations, all_energies):
-        fname = f"{len(self.particles)}_{schedule}_{iterations}"
+    def write_data(self, schedule,all_temps, chain_length, all_energies):
+        fname = f"{len(self.particles)}_{schedule}_{len(all_temps)}_{chain_length}"
         if not os.path.exists('logged_data'):
             os.makedirs("logged_data")
         my_file = Path(os.path.join("logged_data", fname + ".csv"))
@@ -167,13 +169,23 @@ class Charges():
                 wr = csv.writer(f)
                 wr.writerow(["all_energies"])
 
-        # log the data
-        with open(os.path.join("logged_data", fname + ".csv"), "a") as f:
-            wr = csv.writer(f)
-            wr.writerow(all_energies)
-            # wr.writerow([_, _, _, _, _])
+        write_df = pandas.DataFrame(columns=['Temperatures', 'Chain_indices', 'Potential_energy'])
+        list_temperatures = np.repeat(all_temps, chain_length*self.n_particles)
+        chain_indices = np.repeat(np.arange(0, chain_length), len(all_temps)*self.n_particles)
+        write_df["Temperatures"] = list_temperatures
+        write_df["Chain_indices"] = chain_indices
+        write_df["Potential_energy"] = all_energies
 
-    def iterate_SA_optimize(self, low_temp, high_temp, iterations, schedule, single_rand_particle=False):
+        write_df.to_csv(os.path.join("logged_data", fname + ".csv"))
+
+        # log the data
+        # with open(os.path.join("logged_data", fname + ".csv"), "a") as f:
+        #     wr = csv.writer(f)
+        #     wr.writerow(all_energies)
+        #     wr.writerow(list_temperatures)
+        #     wr.writerow(chain_indices)
+
+    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, single_rand_particle=False):
 
         # save potential energy for each iteration
         nr_points = len(self.particles)
@@ -181,18 +193,20 @@ class Charges():
             nr_points = 1
         if low_temp == 0:
             low_temp += 0.01
-        all_temps = self.generate_temperature_list(low_temp, high_temp,
-                                                   iterations, schedule)
 
-        all_energies = np.empty(iterations * nr_points)
+        all_temps = self.generate_temperature_list(low_temp, high_temp,
+                                                   n_temps, schedule)
+
+        all_energies = np.empty(n_temps * nr_points* chain_length)
         p_idx = 0
         for cur_temp in all_temps:
-            for p in range(nr_points):
-                all_energies[p_idx] = self.pot_energy
-                self.do_SA_step(p, cur_temp, single_rand_particle)
-                p_idx += 1
+            for chain_index in range(chain_length):
+                for p in range(nr_points):
+                    all_energies[p_idx] = self.pot_energy
+                    self.do_SA_step(p, cur_temp, single_rand_particle)
+                    p_idx += 1
 
-        self.write_data(schedule, iterations, all_energies)
+        self.write_data(schedule, all_temps, chain_length, all_energies)
         return self.particles
 
     def total_force_on_particle(self, p):
