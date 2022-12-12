@@ -13,20 +13,18 @@ def plot_points(radius, points, ch):
     
     fig, ax = plt.subplots(1)
     ax.plot(a, b, color='black')
-    # plotpoints = []
-    # for p in points:
-    scatter = ax.scatter(points[:,0], points[:,1], color='blue')
+    scatter, = ax.plot(points[:,0], points[:,1], 'bo')
     ax.set_aspect(1)
-    # plt.show()
 
-    def animate(frame_num):
-        for p in range(ch.n_particles):
-            ch.move_particle_random(p, 0.1)
-        # test.append(ch.particles)
-        scatter.set_offsets(ch.particles[:,0], ch.particles[:,1])
-        return scatter
-
-    anim = FuncAnimation(fig, animate, frames=100, interval=5)
+    # def animate(frame_num):
+    #     for p in range(ch.n_particles):
+    #         ch.move_particle_random(p, 0.1)
+    #     data = ch.particles
+    #     scatter.set_xdata(data[:,0])
+    #     scatter.set_ydata(data[:,1])
+    #     return scatter
+    
+    # anim = FuncAnimation(fig, animate, frames=100, interval=5)
     plt.show()
 
-    # return fig, ax, scatter, 
+    # return anim

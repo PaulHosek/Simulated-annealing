@@ -17,16 +17,16 @@ class Charges():
     def __init__(self, n_particles, radius=1, step_size=0.01):
         self.n_particles = n_particles
         self.radius = radius
-        self.particles = self.generate_points(n_particles, radius)
+        self.particles = self.generate_points(radius)
         self.pot_energy = self.evaluate_configuration()
         self.step_size = step_size
 
-    def generate_points(self, n_particles, radius=1, seed=None):
+    def generate_points(self, radius=1, seed=None):
         """ Generate n_particles within a circle 
         """
         rng = np.random.default_rng(seed)
         points = []
-        for n in range(n_particles):
+        for n in range(self.n_particles):
             # random angle and distance from center
             alpha = 2 * np.pi * rng.random()
             r = radius * np.sqrt(rng.random())
@@ -225,3 +225,12 @@ class Charges():
         forces = force_f(self.euclidean_vec(comb))
         res = np.vstack(np.sin(force_dirs), np.cos(force_dirs)).T * forces
         return res, force_dirs, forces
+
+def total_force_on_particle_fast(self, p):
+    F = np.zeros(2)
+    for particle in range(self.n_particles):
+        if particle != p:
+            dir = self.particles[particle] - self.particles[p]
+            dist = self.euclidean(self.particles[particle], self.particles[p])
+            F += dir / (dist ** 3)
+    return F / (self.n_particles - 1)
