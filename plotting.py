@@ -91,8 +91,8 @@ def plot_convergence_v1(filename):
 
 def plot_convergence(fname,pic_name,first_n_iters=None):
     res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
-    if first_n_iters:
-        res_df = res_df[:first_n_iters]
+
+
 
 
     # calculate mean and 95% ci for temperature level
@@ -120,5 +120,6 @@ def plot_convergence(fname,pic_name,first_n_iters=None):
 
     ax1.set_ylabel("Potential Energie, E")
     ax1.set_xlabel("Iterations")
-    plt.xlim((1, 3000))
+    if first_n_iters:
+        plt.xlim((1, first_n_iters))
     plt.savefig(pic_name,dpi=300,bbox_inches='tight')
