@@ -107,13 +107,41 @@ class Charges():
         """ Tries to move particle p (index for particles) by force
             returns 1 if success, 0 if failed
         """
-        step = self.step_size * self.total_force_on_particle(p)
+        F = self.total_force_on_particle(p)
+        step = self.step_size * F
         particle = self.particles[p]
         if self.check_in_circle(particle + step):
             self.particles[p] = particle + step
-            return 1
         else:
-            return 0
+            self.move_along_edge(p, particle, F)
+            # return 1
+
+    def move_along_edge(self, p, particle, force):
+        """ Move particle along edge of the circle to avoid it getting stuck 
+            in local minimum
+        """
+        F = np.linalg.norm(force)
+        coord = particle + force
+
+        theta_force = np.arctan2(coord[1], coord[0])
+        theta_part = np.arctan2(particle[1], particle[0])
+
+        diff = np.abs(theta_force - theta_part)
+        bounce = self.radius #* (1-diff) #* F
+        step = np.pi / 45
+
+        if np.sign(theta_part) == -1.0:
+            if theta_force > theta_part:
+                theta = theta_part + step
+            else:
+                theta = theta_part - step
+        else:
+            if theta_force > theta_part:
+                theta = theta_part + step
+            else:
+                theta = theta_part - step
+        new = np.array([bounce * np.cos(theta), bounce * np.sin(theta)])
+        self.particles[p] = new
 
     def move_particle_random_new(self, p):
         rng = np.random.default_rng(None)
@@ -221,7 +249,6 @@ class Charges():
 
         self.write_data(schedule, all_temps, chain_length, all_energies)
         return self.particles
-
 
     def total_force_on_particle(self, p):
         F = np.zeros(2)
