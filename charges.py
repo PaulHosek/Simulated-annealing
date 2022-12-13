@@ -183,7 +183,7 @@ class Charges():
 
         write_df = pandas.DataFrame(columns=['Temperatures', 'Chain_indices', 'Potential_energy'])
         list_temperatures = np.repeat(all_temps, chain_length*self.n_particles)
-        chain_indices = np.repeat(np.arange(0, chain_length), len(all_temps)*self.n_particles)
+        chain_indices = np.tile(np.arange(0, chain_length), len(all_temps)*self.n_particles)
         write_df["Temperatures"] = list_temperatures
         write_df["Chain_indices"] = chain_indices
         write_df["Potential_energy"] = all_energies
