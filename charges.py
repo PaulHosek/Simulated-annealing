@@ -184,22 +184,29 @@ class Charges():
             self.particles = last_particles
 
     @staticmethod
-    def generate_temperature_list(low_temp, high_temp, n_temps, schedule):
+    def generate_temperature_list(low_temp, high_temp, n_temps, schedule, wavy = False):
         """
-        Schedule: Linear, exponential, geometric
+        Schedule: Linear, evenly spaced exponential, exponential 0.003.
+        If wavy == True, transform function into wavy variant.
         """
+        if wavy:
+            wave_func = lambda x: x + np.exp(-0.001 * -x) * np.sin(1 * -x)
+        else:
+            wave_func = lambda x: x
         if schedule == "linear":
-            return np.linspace(high_temp, low_temp, n_temps)
+            return wave_func(np.linspace(high_temp, low_temp, n_temps))
         elif schedule == "exponential_even_spacing":
-            return np.geomspace(high_temp, low_temp, n_temps)
+            return wave_func(np.geomspace(high_temp, low_temp, n_temps))
         elif schedule == "exponential_0.003":
-            return np.exp(-np.arange(0, n_temps) * 30 / n_temps) * high_temp
+            return wave_func(np.exp(-np.arange(0, n_temps) * 30 / n_temps) * high_temp)
         else:
             raise TypeError("%s is not a valid cooling schedule."
                             " Try linear, exponential_even_spacing or exponential_0.003" % schedule)
 
-    def write_data(self, schedule, all_temps, chain_length, all_energies):
-        fname = f"{len(self.particles)}_{schedule}_{len(all_temps)}_{chain_length}"
+    def write_data(self, schedule, all_temps, chain_length, all_energies, force, wavy):
+        force = 'force' if force else 'noforce'
+        wavy = 'wavy' if wavy else 'nowavy'
+        fname = f"{len(self.particles)}_{schedule}_{len(all_temps)}_{chain_length}_{force}_{wavy}"
         if not os.path.exists('logged_data'):
             os.makedirs("logged_data")
         my_file = Path(os.path.join("logged_data", fname + ".csv"))
@@ -211,7 +218,7 @@ class Charges():
 
         write_df = pandas.DataFrame(columns=['Temperatures', 'Chain_indices', 'Potential_energy'])
         list_temperatures = np.repeat(all_temps, chain_length*self.n_particles)
-        chain_indices = np.repeat(np.arange(0, chain_length), len(all_temps)*self.n_particles)
+        chain_indices = np.tile(np.arange(0, chain_length), len(all_temps)*self.n_particles)
         write_df["Temperatures"] = list_temperatures
         write_df["Chain_indices"] = chain_indices
         write_df["Potential_energy"] = all_energies
@@ -225,7 +232,7 @@ class Charges():
         #     wr.writerow(list_temperatures)
         #     wr.writerow(chain_indices)
 
-    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=False):
+    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=False,wavy=False):
 
         # save potential energy for each iteration
         
@@ -233,7 +240,7 @@ class Charges():
             low_temp += 0.01
 
         all_temps = self.generate_temperature_list(low_temp, high_temp,
-                                                   n_temps, schedule)
+                                                   n_temps, schedule, wavy)
 
         all_energies = np.empty(n_temps * self.n_particles * chain_length)
         p_idx = 0
@@ -247,7 +254,7 @@ class Charges():
                     self.do_SA_step(p, cur_temp, force)
                     p_idx += 1
 
-        self.write_data(schedule, all_temps, chain_length, all_energies)
+        self.write_data(schedule, all_temps, chain_length, all_energies, force, wavy)
         return self.particles
 
     def total_force_on_particle(self, p):
