@@ -122,7 +122,6 @@ class Charges():
         4. If worse accept depending on temperature
         p = index of particle
         """
-
         rng = np.random.default_rng(None)
         if single_rand_particle:
             p = rng.integers(0, len(self.particles))
