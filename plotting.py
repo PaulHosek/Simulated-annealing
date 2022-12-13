@@ -89,7 +89,7 @@ def plot_convergence_v1(filename):
     ax2.set_ylabel('Temperature', color='red')
     plt.show()
 
-def plot_convergence(fname,pic_name,first_n_iters=None):
+def plot_convergence(fname,pic_name,first_n_iters=None, plot_points = True):
     res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
 
 
@@ -112,7 +112,8 @@ def plot_convergence(fname,pic_name,first_n_iters=None):
     sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color='grey', linestyle='--')
     ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_hi'], color='lightblue', alpha=0.5)
     ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_lo'], color='lightblue', alpha=0.5)
-    ax1.scatter(x_iters[::-1], stats['mean'], color='black', s=20)
+    if plot_points:
+        ax1.scatter(x_iters[::-1], stats['mean'], color='black', s=20)
 
     sns.set_theme(style="white")
     ax2 = ax1.twinx()
