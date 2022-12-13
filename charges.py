@@ -232,7 +232,7 @@ class Charges():
         #     wr.writerow(list_temperatures)
         #     wr.writerow(chain_indices)
 
-    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=False,wavy=False):
+    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=False, wavy=False):
 
         # save potential energy for each iteration
         

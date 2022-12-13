@@ -42,8 +42,9 @@ def plot_points(points, charge=None, radius=1.0, force=False):
     
     plt.show()
 
-def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length, force=False):
+def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length, wavy=False, force=False):
     """ Experimental function """
+    forcelist = np.append(np.zeros(int(n_temps*0.75)), (np.ones(int(n_temps*0.25))))
     theta = np.linspace(0, 2 * np.pi, 150)
     a = ch.radius * np.cos(theta)
     b = ch.radius * np.sin(theta)
@@ -54,16 +55,17 @@ def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length
     ax.set_aspect(1)
 
     all_temps = ch.generate_temperature_list(low_temp, high_temp,
-                                                   n_temps, schedule)
+                                                   n_temps, schedule, wavy=wavy)
 
     all_energies = np.empty(n_temps * ch.n_particles * chain_length)
 
     def animate(frame_num):
         cur_temp = all_temps[frame_num]
         print(f"Iteration {frame_num+1}/{n_temps} at {cur_temp} degrees, energy: {ch.evaluate_configuration()}", end='\r', flush=True)
+            
         for chain_index in range(chain_length):
             for p in range(ch.n_particles):
-                ch.do_SA_step(p, cur_temp, force)
+                ch.do_SA_step(p, cur_temp, forcelist[frame_num])
         
         data = ch.particles
         scatter.set_xdata(data[:,0])
