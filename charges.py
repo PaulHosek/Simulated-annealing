@@ -103,6 +103,18 @@ class Charges():
         else:
             return 0
 
+    def move_particle_force(self, p):
+        """ Tries to move particle p (index for particles) by force
+            returns 1 if success, 0 if failed
+        """
+        step = self.step_size * self.total_force_on_particle(p)
+        particle = self.particles[p]
+        if self.check_in_circle(particle + step):
+            self.particles[p] = particle + step
+            return 1
+        else:
+            return 0
+
     def move_particle_random_new(self, p):
         rng = np.random.default_rng(None)
         delta = rng.uniform(-self.step_size, self.step_size, 2)
@@ -113,7 +125,7 @@ class Charges():
         else:
             return 0
 
-    def do_SA_step(self, p, cur_temp, single_rand_particle):
+    def do_SA_step(self, p, cur_temp, force):
         """
         Does a single SA step:
         1. Move point randomly
@@ -123,13 +135,14 @@ class Charges():
         p = index of particle
         """
         rng = np.random.default_rng(None)
-        if single_rand_particle:
-            p = rng.integers(0, len(self.particles))
-        # save olf state of the system
+        # save old state of the system
         last_particles = np.copy(self.particles)
 
         # do SA move
-        self.move_particle_random(p)
+        if force:
+            self.move_particle_force(p)
+        else:
+            self.move_particle_random(p)
         # Evaluate new configuration
         new_pot_energy = self.evaluate_configuration()
         # accept if better independent of temp
@@ -157,7 +170,7 @@ class Charges():
             raise TypeError("%s is not a valid cooling schedule."
                             " Try linear, exponential_even_spacing or exponential_0.003" % schedule)
 
-    def write_data(self, schedule,all_temps, chain_length, all_energies):
+    def write_data(self, schedule, all_temps, chain_length, all_energies):
         fname = f"{len(self.particles)}_{schedule}_{len(all_temps)}_{chain_length}"
         if not os.path.exists('logged_data'):
             os.makedirs("logged_data")
@@ -184,25 +197,26 @@ class Charges():
         #     wr.writerow(list_temperatures)
         #     wr.writerow(chain_indices)
 
-    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, single_rand_particle=False):
+    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=False):
 
         # save potential energy for each iteration
-        nr_points = len(self.particles)
-        if single_rand_particle:
-            nr_points = 1
+        
         if low_temp == 0:
             low_temp += 0.01
 
         all_temps = self.generate_temperature_list(low_temp, high_temp,
                                                    n_temps, schedule)
 
-        all_energies = np.empty(n_temps * nr_points* chain_length)
+        all_energies = np.empty(n_temps * self.n_particles * chain_length)
         p_idx = 0
+        temp_index = 1
         for cur_temp in all_temps:
+            print(f"Iteration {temp_index}/{n_temps} at {cur_temp} degrees", end='\r', flush=True)
+            temp_index += 1
             for chain_index in range(chain_length):
-                for p in range(nr_points):
+                for p in range(self.n_particles):
                     all_energies[p_idx] = self.pot_energy
-                    self.do_SA_step(p, cur_temp, single_rand_particle)
+                    self.do_SA_step(p, cur_temp, force)
                     p_idx += 1
 
         self.write_data(schedule, all_temps, chain_length, all_energies)
@@ -217,3 +231,12 @@ class Charges():
                 dist = self.euclidean(self.particles[particle], self.particles[p])
                 F += dir / (dist ** 3)
         return F / (self.n_particles - 1)
+
+    def all_forces_on_particle(self, p):
+        forces = []
+        for particle in range(self.n_particles):
+            if particle != p:
+                dir = self.particles[p] - self.particles[particle]
+                dist = self.euclidean(self.particles[particle], self.particles[p])
+                forces.append(dir / (dist ** 3))
+        return forces
