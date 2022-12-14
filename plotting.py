@@ -222,7 +222,7 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
         plt.xlim((1, first_n_iters))
     plt.savefig('Images/'+pic_name+".svg",dpi=300,bbox_inches='tight')
 
-def plot_convergence(fname1, fname2, fname3,schedule, names=['no force','full force', "late force"], pic_name='no_force', first_n_iters=None, plot_points=True,
+def plot_convergence_force(fname1, fname2, fname3,schedule, names=['no force','full force', "late force"], pic_name='no_force', first_n_iters=None, plot_points=True,
                      plot_raw_data=False):
     """
     Compare no force, full force and late force in single plot
