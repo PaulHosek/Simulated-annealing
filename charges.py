@@ -189,11 +189,12 @@ class Charges():
         Schedule: Linear, evenly spaced exponential, exponential 0.003.
         If wavy == True, transform function into wavy variant.
         """
+        lb_f = lambda x: np.where(x < low_temp, low_temp, x)
         if wavy:
             wave_transf = lambda x: x + np.exp(-0.001 * -x) * np.sin(1 * -x)
-            wave_func = lambda x: np.where(wave_transf(x) < low_temp, low_temp, wave_transf(x))
+            wave_func = lambda x: lb_f(wave_transf(x))
         else:
-            wave_func = lambda x: x
+            wave_func = lambda x: lb_f(x)
         if schedule == "linear":
             return wave_func(np.linspace(high_temp, low_temp, n_temps))
         elif schedule == "exponential_even_spacing":
@@ -205,9 +206,9 @@ class Charges():
                             " Try linear, exponential_even_spacing or exponential_0.003" % schedule)
 
     def write_data(self, schedule, all_temps, chain_length, all_energies, force, wavy):
-        force = 'force' if force else 'noforce'
-        wavy = 'wavy' if wavy else 'nowavy'
-        fname = f"{len(self.particles)}_{schedule}_{len(all_temps)}_{chain_length}_{force}_{wavy}"
+        force_nam = 'force' if force else 'noforce'
+        wavy_nam = 'wavy' if wavy else 'nowavy'
+        fname = f"{len(self.particles)}_{schedule}_{len(all_temps)}_{chain_length}_{force_nam}_{wavy_nam}"
         if not os.path.exists('logged_data'):
             os.makedirs("logged_data")
         my_file = Path(os.path.join("logged_data", fname + ".csv"))

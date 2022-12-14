@@ -119,7 +119,7 @@ def plot_convergence(fname,pic_name,first_n_iters=None, plot_points = True):
     sns.lineplot(ax=ax2, x=res_df["Iterations"], y=res_df["Temperatures"], color='red')
 
     ax1.set_ylabel("Potential Energie, E")
-    ax1.set_xlabel("Iterations")
+    ax1.set_xlabel("Evaluations")
     if first_n_iters:
         plt.xlim((1, first_n_iters))
-    plt.savefig(pic_name,dpi=300,bbox_inches='tight')
+    plt.savefig('Images/'+pic_name+".svg",dpi=300,bbox_inches='tight')
