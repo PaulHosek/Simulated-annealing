@@ -221,3 +221,58 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
     if first_n_iters:
         plt.xlim((1, first_n_iters))
     plt.savefig('Images/'+pic_name+".svg",dpi=300,bbox_inches='tight')
+
+def plot_convergence_forces(fname1, fname2, fname3,names=['no force','full force', "late force"], pic_name='no_force', first_n_iters=None, plot_points=True,
+                     plot_raw_data=False):
+    """
+    Plot convergence, temperature and final configuration in single plot and save as svg.
+    @param fname: file name for the energies
+    @param pic_name: the name of the output image, if black will use "final_particles_" + fname + '.csv'
+    @param first_n_iters: only show the first n evaluations
+    @param plot_points: if plot the mean energy as additional scatterpoints over the curve
+    @param plot_raw_data: if plot the raw data under the plot
+    """
+    # draw
+    plt.figure(figsize=(12, 8))
+    sns.set_theme(style="whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    colors = ['red','blue','green']
+    region_colors = ['indianred','cornflowerblue','mediumseagreen']
+
+    for idx, fname in enumerate([fname1, fname2, fname3]):
+
+        # get data
+        particles_fname = "final_particles_" + fname + '.csv'
+        final_config = np.loadtxt('logged_data/' + particles_fname, delimiter=',')
+        res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
+
+        # calculate mean and 95% ci for temperature level
+        stats = res_df.groupby(['Temperatures']).agg(['mean', 'sem'])
+        x_iters = stats["Iterations"]['mean']
+        stats = stats["Potential_energy"]
+        stats['ci95_hi'] = stats['mean'] + 1.96 * stats['sem']
+        stats['ci95_lo'] = stats['mean'] - 1.96 * stats['sem']
+        stats = stats.iloc[::-1]
+
+        # draw main convergence data, CI and means
+        ax1 = sns.lineplot(x=x_iters, y=stats['mean'], sort=False, color=colors[idx], label=names[idx])
+        sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_hi'], sort=False, color=region_colors[idx], linestyle='--')
+        sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color=region_colors[idx], linestyle='--')
+        ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_hi'], color=region_colors[idx], alpha=0.5)
+        ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_lo'], color=region_colors[idx], alpha=0.5)
+        if plot_points:
+            ax1.scatter(x_iters[::-1], stats['mean'], color='black', s=20)
+
+    lines, labels = ax1.get_legend_handles_labels()
+    leg = ax1.legend(lines, labels, loc='upper right', framealpha=1, prop={'size': 14})
+    leg.get_frame().set_edgecolor('black')
+
+    # color the axis
+
+    ax1.set_ylabel(r"Potential Energy, $E$")
+    ax1.set_xlabel("Evaluations")
+    if first_n_iters:
+        plt.xlim((1, first_n_iters))
+
+    plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
