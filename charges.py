@@ -190,7 +190,8 @@ class Charges():
         If wavy == True, transform function into wavy variant.
         """
         if wavy:
-            wave_func = lambda x: x + np.exp(-0.001 * -x) * np.sin(1 * -x)
+            wave_transf = lambda x: x + np.exp(-0.001 * -x) * np.sin(1 * -x)
+            wave_func = lambda x: np.where(wave_transf(x) < low_temp, low_temp, wave_transf(x))
         else:
             wave_func = lambda x: x
         if schedule == "linear":
