@@ -88,7 +88,7 @@ def plot_convergence_v1(filename):
     ax2.set_ylabel('Temperature', color='red')
     plt.show()
 
-def plot_convergence(fname,pic_name,first_n_iters=None, plot_points = True, plot_original=False):
+def plot_convergence_v2(fname,pic_name,first_n_iters=None, plot_points = True, plot_original=False):
     res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
 
 
@@ -123,6 +123,101 @@ def plot_convergence(fname,pic_name,first_n_iters=None, plot_points = True, plot
     ax1.legend(loc='lower left')
     ax1.set_ylabel("Potential Energy, E")
     ax1.set_xlabel("Evaluations")
+    if first_n_iters:
+        plt.xlim((1, first_n_iters))
+    plt.savefig('Images/'+pic_name+".svg",dpi=300,bbox_inches='tight')
+
+
+def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True, plot_raw_data=False):
+    """
+    Plot convergence, temperature and final configuration in single plot and save as svg.
+    @param fname: file name for the energies
+    @param pic_name: the name of the output image, if black will use "final_particles_" + fname + '.csv'
+    @param first_n_iters: only show the first n evaluations
+    @param plot_points: if plot the mean energy as additional scatterpoints over the curve
+    @param plot_raw_data: if plot the raw data under the plot
+    """
+    if not pic_name:
+        pic_name = fname
+    particles_fname = "final_particles_" + fname + '.csv'
+    final_config = np.loadtxt('logged_data/' + particles_fname, delimiter=',')
+    res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
+
+
+    # plotting.plot_points(my_charge.particles)
+    # ins.plotting.plot_points(my_charge.particles)
+
+    def insert_plot(points,ax, radius=1.0):
+        """ Plot the final configuration
+        """
+        theta = np.linspace(0, 2 * np.pi, 150)
+        a = radius * np.cos(theta)
+        b = radius * np.sin(theta)
+        # ax.axis('off')
+        ax.set_xticks([],[])
+        ax.set_yticks([],[])
+        ax.plot(a, b, color='black')
+        ax.scatter(points[:,0], points[:,1],color='blue',marker='o')
+        ax.set_aspect(1)
+        ax.axhline(0,.05,1-0.05,color='black')
+        ax.axvline(0,.05,1-0.05,color='black')
+
+
+
+    # calculate mean and 95% ci for temperature level
+    stats = res_df.groupby(['Temperatures']).agg(['mean', 'sem'])
+    x_iters = stats["Iterations"]['mean']
+    stats = stats["Potential_energy"]
+    stats['ci95_hi'] = stats['mean'] + 1.96 * stats['sem']
+    stats['ci95_lo'] = stats['mean'] - 1.96 * stats['sem']
+    stats = stats.iloc[::-1]
+
+    # draw
+    fax1 = plt.figure(figsize=(12, 8))
+    sns.set_theme(style="whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    # draw main convergence data, CI and means
+    ax1 = sns.lineplot(x=x_iters, y=stats['mean'], sort=False, color='blue', label='Mean Energy')
+    # plot raw data
+    if plot_raw_data:
+        sns.lineplot(ax=ax1, x=res_df["Iterations"], y=res_df["Potential_energy"],
+                     color='black',alpha=0.15,label='Raw energy')
+    sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_hi'], sort=False, color='cornflowerblue', linestyle='--', label='95% CI')
+    sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color='cornflowerblue', linestyle='--')
+    ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_hi'], color='cornflowerblue', alpha=0.5)
+    ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_lo'], color='cornflowerblue', alpha=0.5)
+    if plot_points:
+        ax1.scatter(x_iters[::-1], stats['mean'], color='black', s=20)
+
+    # add temperature plot
+    sns.set_theme(style="white")
+    ax2 = ax1.twinx()
+    temp_line = sns.lineplot(ax=ax2, x=res_df["Iterations"], y=res_df["Temperatures"], color='red', label='Temperature')
+
+    # insert final configuration
+    ins = ax1.inset_axes([0.65,0.46,0.3,0.3*1.5])
+    insert_plot(final_config,ax=ins)
+
+
+
+    # legend
+    ax2.legend([],[],frameon=False)
+    lines, labels = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    leg = ax1.legend(lines + lines2, labels + labels2, loc='upper center', framealpha=1, prop={'size': 14})
+    leg.get_frame().set_edgecolor('black')
+
+    # color the axis
+    ax2.spines['right'].set_color('red')
+    ax1.spines['left'].set_color('blue')
+    ax2.spines['right'].set_linewidth(2)
+    ax1.spines['left'].set_linewidth(2)
+
+
+    ax1.set_ylabel(r"Potential Energy, $E$")
+    ax1.set_xlabel("Evaluations")
+    temp_line.set_ylabel("Temperature", fontsize = 18)
     if first_n_iters:
         plt.xlim((1, first_n_iters))
     plt.savefig('Images/'+pic_name+".svg",dpi=300,bbox_inches='tight')

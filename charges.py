@@ -230,6 +230,7 @@ class Charges():
         # write final particle configuration
         final_config = self.particles
         particles_fname = "final_particles_"+fname + ".csv"
+        print(particles_fname)
         np.savetxt('logged_data/'+particles_fname, final_config, delimiter=",")
 
 
