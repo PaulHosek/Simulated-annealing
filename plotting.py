@@ -222,15 +222,14 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
         plt.xlim((1, first_n_iters))
     plt.savefig('Images/'+pic_name+".svg",dpi=300,bbox_inches='tight')
 
-def plot_convergence_forces(fname1, fname2, fname3,names=['no force','full force', "late force"], pic_name='no_force', first_n_iters=None, plot_points=True,
+def plot_convergence(fname1, fname2, fname3,schedule, names=['no force','full force', "late force"], pic_name='no_force', first_n_iters=None, plot_points=True,
                      plot_raw_data=False):
     """
-    Plot convergence, temperature and final configuration in single plot and save as svg.
-    @param fname: file name for the energies
+    Compare no force, full force and late force in single plot
+    @param fname1,fname2,fname3: file name for the energies for the 3 force variants
     @param pic_name: the name of the output image, if black will use "final_particles_" + fname + '.csv'
     @param first_n_iters: only show the first n evaluations
     @param plot_points: if plot the mean energy as additional scatterpoints over the curve
-    @param plot_raw_data: if plot the raw data under the plot
     """
     # draw
     plt.figure(figsize=(12, 8))
@@ -272,7 +271,11 @@ def plot_convergence_forces(fname1, fname2, fname3,names=['no force','full force
 
     ax1.set_ylabel(r"Potential Energy, $E$")
     ax1.set_xlabel("Evaluations")
+
     if first_n_iters:
         plt.xlim((1, first_n_iters))
+    plt.text(ax1.get_xlim()[1]*0.5, ax1.get_ylim()[1]*0.95, f'Cooling schedule: {schedule}', style='italic',
+            bbox={'facecolor':'white','edgecolor': 'black', 'alpha': 1, 'pad': 10}
+             ,horizontalalignment='center', verticalalignment='center')
 
     plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
