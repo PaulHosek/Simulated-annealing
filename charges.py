@@ -227,12 +227,12 @@ class Charges():
 
         write_df.to_csv(os.path.join("logged_data", fname + ".csv"))
 
-        # log the data
-        # with open(os.path.join("logged_data", fname + ".csv"), "a") as f:
-        #     wr = csv.writer(f)
-        #     wr.writerow(all_energies)
-        #     wr.writerow(list_temperatures)
-        #     wr.writerow(chain_indices)
+        # write final particle configuration
+        final_config = self.particles
+        particles_fname = "final_particles_"+fname + ".csv"
+        np.savetxt('logged_data/'+particles_fname, final_config, delimiter=",")
+
+
 
     def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=False, wavy=False):
 

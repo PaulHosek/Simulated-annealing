@@ -13,7 +13,7 @@ temp_index = 1
 
 ## Functions
 
-def plot_points(points, charge=None, radius=1.0, force=False):
+def plot_points(points, charge=None, radius=1.0, force=False, show=True):
     """ Plot a single configuration of the particles, if force is set to 
         true also displays the vectors of the forces, black individual green 
         the normalized sum
@@ -39,8 +39,8 @@ def plot_points(points, charge=None, radius=1.0, force=False):
 
             force_x, force_y = charge.total_force_on_particle(p)
             plt.quiver(x, y, force_x, force_y, angles='xy', scale_units='xy', scale=1, color='green')
-    
-    plt.show()
+    if show:
+        plt.show()
 
 def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length, wavy=False, force=False):
     """ Experimental function """
@@ -88,7 +88,7 @@ def plot_convergence_v1(filename):
     ax2.set_ylabel('Temperature', color='red')
     plt.show()
 
-def plot_convergence(fname,pic_name,first_n_iters=None, plot_points = True):
+def plot_convergence(fname,pic_name,first_n_iters=None, plot_points = True, plot_original=False):
     res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
 
 
@@ -118,7 +118,10 @@ def plot_convergence(fname,pic_name,first_n_iters=None, plot_points = True):
     ax2 = ax1.twinx()
     sns.lineplot(ax=ax2, x=res_df["Iterations"], y=res_df["Temperatures"], color='red')
 
-    ax1.set_ylabel("Potential Energie, E")
+    if plot_original:
+        sns.lineplot(ax=ax1, x=res_df["Iterations"], y=res_df["Potential_energy"], color='black',alpha=0.2)
+    ax1.legend(loc='lower left')
+    ax1.set_ylabel("Potential Energy, E")
     ax1.set_xlabel("Evaluations")
     if first_n_iters:
         plt.xlim((1, first_n_iters))
