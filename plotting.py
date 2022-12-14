@@ -75,60 +75,8 @@ def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length
     anim = FuncAnimation(fig, animate, frames=n_temps, interval=50, repeat=False)
     return anim
 
-def plot_convergence_v1(filename):
-    fig, ax = plt.subplots()
-    data = pd.read_csv(filename)
-    energy = data["Potential_energy"]
-    temp = data["Temperatures"]
 
-    ax.plot(energy)
-    ax.set_ylabel('Total energy of the system', color='blue')
-    ax2 = plt.twinx(ax)
-    ax2.plot(temp, color='red')
-    ax2.set_ylabel('Temperature', color='red')
-    plt.show()
-
-def plot_convergence_v2(fname,pic_name,first_n_iters=None, plot_points = True, plot_original=False):
-    res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
-
-
-
-
-    # calculate mean and 95% ci for temperature level
-    stats = res_df.groupby(['Temperatures']).agg(['mean', 'sem'])
-    x_iters = stats["Iterations"]['mean']
-    stats = stats["Potential_energy"]
-    stats['ci95_hi'] = stats['mean'] + 1.96 * stats['sem']
-    stats['ci95_lo'] = stats['mean'] - 1.96 * stats['sem']
-    stats = stats.iloc[::-1]
-
-    # draw
-    plt.figure(figsize=(12, 8))
-    sns.set_theme(style="whitegrid")
-
-    ax1 = sns.lineplot(x=x_iters, y=stats['mean'], sort=False, color='blue', label='Mean Energy in Chain')
-    sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_hi'], sort=False, color='grey', linestyle='--', label='95% CI')
-    sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color='grey', linestyle='--')
-    ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_hi'], color='lightblue', alpha=0.5)
-    ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_lo'], color='lightblue', alpha=0.5)
-    if plot_points:
-        ax1.scatter(x_iters[::-1], stats['mean'], color='black', s=20)
-
-    sns.set_theme(style="white")
-    ax2 = ax1.twinx()
-    sns.lineplot(ax=ax2, x=res_df["Iterations"], y=res_df["Temperatures"], color='red')
-
-    if plot_original:
-        sns.lineplot(ax=ax1, x=res_df["Iterations"], y=res_df["Potential_energy"], color='black',alpha=0.2)
-    ax1.legend(loc='lower left')
-    ax1.set_ylabel("Potential Energy, E")
-    ax1.set_xlabel("Evaluations")
-    if first_n_iters:
-        plt.xlim((1, first_n_iters))
-    plt.savefig('Images/'+pic_name+".svg",dpi=300,bbox_inches='tight')
-
-
-def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True, plot_raw_data=False):
+def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True, plot_raw_data=False, plot_final_state = True):
     """
     Plot convergence, temperature and final configuration in single plot and save as svg.
     @param fname: file name for the energies
@@ -196,8 +144,9 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
     temp_line = sns.lineplot(ax=ax2, x=res_df["Iterations"], y=res_df["Temperatures"], color='red', label='Temperature')
 
     # insert final configuration
-    ins = ax1.inset_axes([0.65,0.46,0.3,0.3*1.5])
-    insert_plot(final_config,ax=ins)
+    if plot_final_state:
+        ins = ax1.inset_axes([0.65,0.46,0.3,0.3*1.5])
+        insert_plot(final_config,ax=ins)
 
 
 
@@ -222,8 +171,8 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
         plt.xlim((1, first_n_iters))
     plt.savefig('Images/'+pic_name+".svg",dpi=300,bbox_inches='tight')
 
-def plot_convergence_force(fname1, fname2, fname3,schedule, names=['no force','full force', "late force"], pic_name='no_force', first_n_iters=None, plot_points=True,
-                     plot_raw_data=False):
+def plot_convergence_force(fname1, fname2, fname3,schedule, names=('no force','full force', "late force"),
+                           pic_name='no_force', first_n_iters=None, plot_points=True,plot_raw_data=False):
     """
     Compare no force, full force and late force in single plot
     @param fname1,fname2,fname3: file name for the energies for the 3 force variants
@@ -256,6 +205,10 @@ def plot_convergence_force(fname1, fname2, fname3,schedule, names=['no force','f
 
         # draw main convergence data, CI and means
         ax1 = sns.lineplot(x=x_iters, y=stats['mean'], sort=False, color=colors[idx], label=names[idx])
+        # plot raw data
+        if plot_raw_data:
+            sns.lineplot(ax=ax1, x=res_df["Iterations"], y=res_df["Potential_energy"],
+                         color=colors[idx], alpha=0.15, label='Raw energy')
         sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_hi'], sort=False, color=region_colors[idx], linestyle='--')
         sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color=region_colors[idx], linestyle='--')
         ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_hi'], color=region_colors[idx], alpha=0.5)
@@ -263,11 +216,88 @@ def plot_convergence_force(fname1, fname2, fname3,schedule, names=['no force','f
         if plot_points:
             ax1.scatter(x_iters[::-1], stats['mean'], color='black', s=20)
 
+        # add temperature plot
     lines, labels = ax1.get_legend_handles_labels()
+    sns.set_theme(style="white")
+    ax2 = ax1.twinx()
+    temp_line = sns.lineplot(ax=ax2, x=res_df["Iterations"], y=res_df["Temperatures"], color='black',linestyle=':',
+                                 label='Temperature',legend=False)
+
+
     leg = ax1.legend(lines, labels, loc='upper right', framealpha=1, prop={'size': 14})
     leg.get_frame().set_edgecolor('black')
 
-    # color the axis
+
+
+    ax1.set_ylabel(r"Potential Energy, $E$")
+    ax1.set_xlabel("Evaluations")
+
+    if first_n_iters:
+        plt.xlim((1, first_n_iters))
+    plt.text(ax1.get_xlim()[1]*0.5, ax1.get_ylim()[1]*0.95, f'Cooling schedule: {schedule}', style='italic',
+            bbox={'facecolor':'white','edgecolor': 'black', 'alpha': 1, 'pad': 10}
+             ,horizontalalignment='center', verticalalignment='center')
+
+    plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
+
+
+
+
+
+def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force','full force', "late force"),
+                           pic_name='no_force', first_n_iters=None,
+                           plot_temp = False):
+    """
+    Compare no force, full force and late force in single plot
+    @param fname1,fname2,fname3: file name for the energies for the 3 force variants
+    @param pic_name: the name of the output image, if black will use "final_particles_" + fname + '.csv'
+    @param first_n_iters: only show the first n evaluations
+    @param plot_points: if plot the mean energy as additional scatterpoints over the curve
+    """
+    # draw
+    plt.figure(figsize=(12, 8))
+    sns.set_theme(style="whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    colors = ['red','blue','green']
+
+    for idx, fname in enumerate([fname1, fname2, fname3]):
+
+        # get data
+        particles_fname = "final_particles_" + fname + '.csv'
+        final_config = np.loadtxt('logged_data/' + particles_fname, delimiter=',')
+        res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
+
+        # draw main convergence data, CI and means
+        # plot raw data
+        ax1 = sns.lineplot(x=res_df["Iterations"], y=res_df["Potential_energy"],
+                     color=colors[idx], alpha=0.8, label=names[idx])
+
+
+
+        # add temperature plot
+    lines, labels = ax1.get_legend_handles_labels()
+    if plot_temp:
+        sns.set_theme(style="white")
+        ax2 = ax1.twinx()
+        temp_line = sns.lineplot(ax=ax2, x=res_df["Iterations"], y=res_df["Temperatures"], color='black',linestyle=':',
+                                 label='Temperature',legend=False)
+        temp_line.set_ylabel("Temperature", fontsize=18)
+        # color the axis
+        # ax2.spines['right'].set_color('red')
+        # ax1.spines['left'].set_color('blue')
+        # ax2.spines['right'].set_linewidth(2)
+        # ax1.spines['left'].set_linewidth(2)
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        lines += lines2
+        labels += labels2
+        ax1.set_ylabel("Temperature")
+
+
+    leg = ax1.legend(lines, labels, loc='upper right', framealpha=1, prop={'size': 14})
+    leg.get_frame().set_edgecolor('black')
+
+
 
     ax1.set_ylabel(r"Potential Energy, $E$")
     ax1.set_xlabel("Evaluations")
