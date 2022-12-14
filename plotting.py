@@ -281,7 +281,7 @@ def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force'
         sns.set_theme(style="white")
         ax2 = ax1.twinx()
         temp_line = sns.lineplot(ax=ax2, x=res_df["Iterations"], y=res_df["Temperatures"], color='black',linestyle=':',
-                                 label='Temperature',legend=False)
+                                 label='Temperature',legend=False, linewidth='3')
         temp_line.set_ylabel("Temperature", fontsize=18)
         # color the axis
         # ax2.spines['right'].set_color('red')
