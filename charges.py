@@ -120,15 +120,15 @@ class Charges():
         """ Move particle along edge of the circle to avoid it getting stuck 
             in local minimum
         """
-        F = np.linalg.norm(force)
+        # F = np.linalg.norm(force)
         coord = particle + force
 
         theta_force = np.arctan2(coord[1], coord[0])
         theta_part = np.arctan2(particle[1], particle[0])
 
-        diff = np.abs(theta_force - theta_part)
+        # diff = np.abs(theta_force - theta_part)
         bounce = self.radius #* (1-diff) #* F
-        step = np.pi / 45
+        step = np.pi / 180
 
         if np.sign(theta_part) == -1.0:
             if theta_force > theta_part:
