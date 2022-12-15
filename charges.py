@@ -235,7 +235,13 @@ class Charges():
 
 
 
-    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=False, wavy=False):
+    def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=0, wavy=False):
+        if force == 0:
+            forcelist = np.zeros(n_temps)
+        elif force == 1:
+            forcelist = np.ones(n_temps)
+        else:
+            forcelist = np.append(np.zeros(int(n_temps*0.75)), (np.ones(int(n_temps*0.25))))
 
         # save potential energy for each iteration
         
@@ -254,7 +260,7 @@ class Charges():
             for chain_index in range(chain_length):
                 for p in range(self.n_particles):
                     all_energies[p_idx] = self.pot_energy
-                    self.do_SA_step(p, cur_temp, force)
+                    self.do_SA_step(p, cur_temp, forcelist[cur_temp])
                     p_idx += 1
 
         self.write_data(schedule, all_temps, chain_length, all_energies, force, wavy)
