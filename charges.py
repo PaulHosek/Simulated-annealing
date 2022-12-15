@@ -206,7 +206,7 @@ class Charges():
                             " Try linear, exponential_even_spacing or exponential_0.003" % schedule)
 
     def write_data(self, schedule, all_temps, chain_length, all_energies, force, wavy):
-        force_nam = 'force' if force else 'noforce'
+        force_nam = ['force', 'noforce', 'lateforce', 'halfforce'][force]
         wavy_nam = 'wavy' if wavy else 'nowavy'
         fname = f"{len(self.particles)}_{schedule}_{len(all_temps)}_{chain_length}_{force_nam}_{wavy_nam}"
         if not os.path.exists('logged_data'):
@@ -234,14 +234,16 @@ class Charges():
         np.savetxt('logged_data/'+particles_fname, final_config, delimiter=",")
 
 
-
     def iterate_SA_optimize(self, low_temp, high_temp, n_temps, schedule, chain_length, force=0, wavy=False):
         if force == 0:
             forcelist = np.zeros(n_temps)
         elif force == 1:
             forcelist = np.ones(n_temps)
-        else:
+        elif force == 2:
             forcelist = np.append(np.zeros(int(n_temps*0.75)), (np.ones(int(n_temps*0.25))))
+        else:
+            forcelist = np.tile(np.append(np.zeros(int(chain_length/2)), np.ones(int(chain_length/2))), n_temps)
+
 
         # save potential energy for each iteration
         

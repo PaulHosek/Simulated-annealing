@@ -44,7 +44,8 @@ def plot_points(points, charge=None, radius=1.0, force=False, show=True):
 
 def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length, wavy=False, force=False):
     """ Experimental function """
-    forcelist = np.append(np.zeros(int(n_temps*0.75)), (np.ones(int(n_temps*0.25))))
+    # forcelist = np.append(np.zeros(int(n_temps*0.75)), (np.ones(int(n_temps*0.25))))
+    forcelist = np.tile(np.append(np.zeros(int(chain_length/2)), np.ones(int(chain_length/2))), n_temps)
     theta = np.linspace(0, 2 * np.pi, 150)
     a = ch.radius * np.cos(theta)
     b = ch.radius * np.sin(theta)
