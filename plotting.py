@@ -7,6 +7,7 @@ import pandas as pd
 from IPython import display
 
 import seaborn as sns
+from scipy.stats import ttest_ind_from_stats
 # Global vars
 p_idx = 0
 temp_index = 1
@@ -77,9 +78,13 @@ def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length
     return anim
 
 
+# ==============================
+# Convergence plotting functions
+# ==============================
+
 def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True, plot_raw_data=False, plot_final_state = True):
     """
-    Plot convergence, temperature and final configuration in single plot and save as svg.
+    Plot convergence for single run, temperature and final configuration in single plot and save as svg.
     @param fname: file name for the energies
     @param pic_name: the name of the output image, if black will use "final_particles_" + fname + '.csv'
     @param first_n_iters: only show the first n evaluations
@@ -242,9 +247,6 @@ def plot_convergence_force(fname1, fname2, fname3,schedule, names=('no force','f
     plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
 
 
-
-
-
 def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force','full force', "late force"),
                            pic_name='no_force', first_n_iters=None,
                            plot_temp = False):
@@ -308,5 +310,151 @@ def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force'
     plt.text(ax1.get_xlim()[1]*0.5, ax1.get_ylim()[1]*0.95, f'Cooling schedule: {schedule}', style='italic',
             bbox={'facecolor':'white','edgecolor': 'black', 'alpha': 1, 'pad': 10}
              ,horizontalalignment='center', verticalalignment='center')
+
+    plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
+
+
+# Compare 3 over multiple simulations
+
+# Convergence CI
+def plot_convergence_compare(fname1, fname2, fname3,schedule,
+                             names=('no force','full force', "late force"),
+                             pic_name='no_force', first_n_iters=None,
+                             plot_points=True,plot_raw_data=False,cur_path = "logged_data/100_run/"):
+    """
+    CI = sim.
+    Compare no force, full force and late force in single plot
+    @param fname1,fname2,fname3: file name for the energies for the 3 force variants
+    @param pic_name: the name of the output image, if black will use "final_particles_" + fname + '.csv'
+    @param first_n_iters: only show the first n evaluations
+    @param plot_points: if plot the mean energy as additional scatterpoints over the curve
+    """
+    # draw
+    plt.figure(figsize=(12, 8))
+    sns.set_theme(style="whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    colors = ['red','blue','green']
+    region_colors = ['indianred','cornflowerblue','mediumseagreen']
+
+    for idx, fname in enumerate([fname1, fname2, fname3]):
+
+
+        # get data
+        data = np.loadtxt(cur_path+fname, delimiter = ',')
+
+        res_df=pd.DataFrame(data=data[0:,0:],
+                        index=[i for i in range(data.shape[0])],
+                        columns=['run_'+str(i) for i in range(data.shape[1])])
+        del data
+        # calculate mean and 95% ci for temperature level
+        stats = res_df.agg(['mean', 'sem'],axis=1)
+        stats['ci95_hi'] = stats['mean'] + 1.96 * stats['sem']
+        stats['ci95_lo'] = stats['mean'] - 1.96 * stats['sem']
+        x_iters = np.arange(len(stats['mean']))
+        # draw main convergence data, CI and means
+        # ax1 = sns.lineplot(x=x_iters, y=stats['mean'], sort=False, color=colors[idx], label=names[idx])
+        # plot raw data
+        # if plot_raw_data:
+        #     sns.lineplot(ax=ax1, x=res_df["Iterations"], y=res_df["Potential_energy"],
+        #                  color=colors[idx], alpha=0.15, label='Raw energy')
+        ax1 = sns.lineplot(x=x_iters, y=stats['ci95_hi'], sort=False, color=region_colors[idx], linestyle='-', label=names[idx])
+        sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color=region_colors[idx], linestyle='-')
+        # ax1.fill_between(x_iters[::1], stats['mean'], stats['ci95_hi'], color=region_colors[idx], alpha=0.5)
+        # ax1.fill_between(x_iters[::1], stats['mean'], stats['ci95_lo'], color=region_colors[idx], alpha=0.5)
+        # if plot_points:
+        #     ax1.scatter(x_iters[::1], stats['mean'], color='black', s=20)
+
+    lines, labels = ax1.get_legend_handles_labels()
+    leg = ax1.legend(lines, labels, loc='upper right', framealpha=1, prop={'size': 14})
+    leg.get_frame().set_edgecolor('black')
+
+    ax1.set_ylabel(r"Potential Energy, $E$")
+    ax1.set_xlabel("Evaluations")
+
+    if first_n_iters:
+        plt.xlim((1, first_n_iters))
+    plt.text(ax1.get_xlim()[1]*0.5, ax1.get_ylim()[1]*0.95, f'{schedule}', style='italic',
+            bbox={'facecolor':'white','edgecolor': 'black', 'alpha': 1, 'pad': 10}
+             ,horizontalalignment='center', verticalalignment='center')
+
+    plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
+
+# P-value
+def plot_convergence_pval(fname1, fname2, fname3,
+                             names=('no force','full force', "late force"),
+                             pic_name='no_force', first_n_iters=None,
+                             cur_path = "logged_data/100_run/"):
+    """
+    Plot the p value vs the number of evaluations. This allows us to compare multiple cooling schemes or the effects of force.
+    x = p-value, y = evaluations
+    @param fname1,fname2,fname3: file name for the energies for the 3 force variants
+    @param pic_name: the name of the output image, if black will use "final_particles_" + fname + '.csv'
+    @param first_n_iters: only show the first n evaluations
+    @param plot_points: if plot the mean energy as additional scatterpoints over the curve
+    """
+    # draw
+    plt.figure(figsize=(12, 8))
+    sns.set_theme(style="whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    colors = ['red','blue','green']
+    region_colors = ['indianred','cornflowerblue','mediumseagreen']
+
+
+    data1 = np.loadtxt(cur_path + fname1, delimiter=',')
+    data2 = np.loadtxt(cur_path + fname2, delimiter=',')
+    data3 = np.loadtxt(cur_path + fname3, delimiter=',')
+
+    res_df1 = pd.DataFrame(data=data1[0:, 0:],
+                           index=[i for i in range(data1.shape[0])],
+                           columns=['run_' + str(i) for i in range(data1.shape[1])])
+
+    res_df2 = pd.DataFrame(data=data2[0:, 0:],
+                           index=[i for i in range(data2.shape[0])],
+                           columns=['run_' + str(i) for i in range(data2.shape[1])])
+
+    res_df3 = pd.DataFrame(data=data3[0:, 0:],
+                           index=[i for i in range(data3.shape[0])],
+                           columns=['run_' + str(i) for i in range(data2.shape[1])])
+    stats1 = res_df1.agg(['mean', 'std'], axis=1)
+    stats2 = res_df2.agg(['mean', 'std'], axis=1)
+    stats3 = res_df3.agg(['mean', 'std'], axis=1)
+
+    p_vals = pd.DataFrame(columns=[(names[0], names[1]), (names[0], names[2]), (names[1], names[2])])
+    nr_obv = len(res_df1)
+
+
+    p_vals[(names[0], names[1])] = ttest_ind_from_stats(stats1['mean'], stats1['std'], nr_obv,
+                                                        stats2['mean'], stats2['std'], nr_obv)[1]
+
+    p_vals[(names[0], names[2])] = ttest_ind_from_stats(stats1['mean'], stats1['std'], nr_obv,
+                                                        stats3['mean'], stats3['std'], nr_obv)[1]
+
+    p_vals[(names[1], names[2])] = ttest_ind_from_stats(stats2['mean'], stats2['std'], nr_obv,
+                                                        stats3['mean'], stats3['std'], nr_obv)[1]
+
+    x_iters = np.arange(len(p_vals[(names[0], names[1])]))
+    ax1 = sns.lineplot(x=x_iters, y=p_vals[(names[0], names[1])],
+                       sort=False, color=colors[0], linestyle='-', alpha = 0.5,
+                       label=(names[0][0] +' vs. '+ names[0][1]))
+    sns.lineplot(ax=ax1, x=x_iters, y=p_vals[(names[0], names[2])],
+                 sort=False, color=colors[1], linestyle='-', alpha = 0.5,
+                 label=(names[1][0] +' vs. '+ names[1][1]))
+    sns.lineplot(ax=ax1, x=x_iters, y=p_vals[(names[1], names[2])],
+                 sort=False, color=colors[2], linestyle='-', alpha = 0.5,
+                 label=(names[2][0] +' vs. '+ names[2][1]))
+    ax1.axhline(0.05,label=r'$\alpha$ of 0.05', color='black',linestyle='--')
+    ax1.set(yscale="log")
+    lines, labels = ax1.get_legend_handles_labels()
+    leg = ax1.legend(lines, labels, loc='best', framealpha=1, prop={'size': 14})
+    leg.get_frame().set_edgecolor('black')
+
+    ax1.set_ylabel(r"p-value")
+    ax1.set_xlabel("Evaluations")
+
+
+    if first_n_iters:
+        plt.xlim((1, first_n_iters))
 
     plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
