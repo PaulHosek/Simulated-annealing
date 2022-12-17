@@ -358,8 +358,8 @@ def plot_convergence_compare(fname1, fname2, fname3,schedule,
         # if plot_raw_data:
         #     sns.lineplot(ax=ax1, x=res_df["Iterations"], y=res_df["Potential_energy"],
         #                  color=colors[idx], alpha=0.15, label='Raw energy')
-        ax1 = sns.lineplot(x=x_iters, y=stats['ci95_hi'], sort=False, color=region_colors[idx], linestyle='-', label=names[idx])
-        sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color=region_colors[idx], linestyle='-')
+        ax1 = sns.lineplot(x=x_iters, y=stats['ci95_hi'], sort=False, color=colors[idx],alpha = 0.5, linestyle='-', label=names[idx])
+        sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color=colors[idx],alpha = 0.5, linestyle='-')
         # ax1.fill_between(x_iters[::1], stats['mean'], stats['ci95_hi'], color=region_colors[idx], alpha=0.5)
         # ax1.fill_between(x_iters[::1], stats['mean'], stats['ci95_lo'], color=region_colors[idx], alpha=0.5)
         # if plot_points:
@@ -374,7 +374,7 @@ def plot_convergence_compare(fname1, fname2, fname3,schedule,
 
     if first_n_iters:
         plt.xlim((1, first_n_iters))
-    plt.text(ax1.get_xlim()[1]*0.5, ax1.get_ylim()[1]*0.95, f'{schedule}', style='italic',
+    plt.text(ax1.get_xlim()[1]*0.2, ax1.get_ylim()[1]*0.95, f'{schedule}', style='italic',
             bbox={'facecolor':'white','edgecolor': 'black', 'alpha': 1, 'pad': 10}
              ,horizontalalignment='center', verticalalignment='center')
 
@@ -401,7 +401,6 @@ def plot_convergence_pval(fname1, fname2, fname3,
     colors = ['red','blue','green']
     region_colors = ['indianred','cornflowerblue','mediumseagreen']
 
-
     data1 = np.loadtxt(cur_path + fname1, delimiter=',')
     data2 = np.loadtxt(cur_path + fname2, delimiter=',')
     data3 = np.loadtxt(cur_path + fname3, delimiter=',')
@@ -423,7 +422,6 @@ def plot_convergence_pval(fname1, fname2, fname3,
 
     p_vals = pd.DataFrame(columns=[(names[0], names[1]), (names[0], names[2]), (names[1], names[2])])
     nr_obv = len(res_df1)
-
 
     p_vals[(names[0], names[1])] = ttest_ind_from_stats(stats1['mean'], stats1['std'], nr_obv,
                                                         stats2['mean'], stats2['std'], nr_obv)[1]
