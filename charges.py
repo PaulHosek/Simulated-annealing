@@ -206,7 +206,7 @@ class Charges():
                             " Try linear, exponential_even_spacing or exponential_0.003" % schedule)
 
     def write_data(self, schedule, all_temps, chain_length, all_energies, force, wavy):
-        force_nam = ['force', 'noforce', 'lateforce', 'halfforce'][force]
+        force_nam = ['noforce', 'force', 'lateforce', 'halfforce'][force]
         wavy_nam = 'wavy' if wavy else 'nowavy'
         fname = f"{len(self.particles)}_{schedule}_{len(all_temps)}_{chain_length}_{force_nam}_{wavy_nam}"
         if not os.path.exists('logged_data'):

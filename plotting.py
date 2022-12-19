@@ -119,11 +119,12 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
 
 
     # calculate mean and 95% ci for temperature level
-    stats = res_df.groupby(['Temperatures']).agg(['mean', 'sem'])
+    stats = res_df.groupby(['Temperatures']).agg(['mean' ,'sem'])
+    # print(stats['mean'])
     x_iters = stats["Iterations"]['mean']
     stats = stats["Potential_energy"]
-    stats['ci95_hi'] = stats['mean'] + 1.96 * stats['sem']
-    stats['ci95_lo'] = stats['mean'] - 1.96 * stats['sem']
+    stats['ci95_hi'] = stats['mean'] + 3.291 * stats['sem']
+    stats['ci95_lo'] = stats['mean'] - 3.291 * stats['sem']
     stats = stats.iloc[::-1]
 
     # draw
@@ -384,7 +385,7 @@ def plot_convergence_compare(fname1, fname2, fname3,schedule,
 def plot_convergence_pval(fname1, fname2, fname3,
                              names=('no force','full force', "late force"),
                              pic_name='no_force', first_n_iters=None,
-                             cur_path = "logged_data/100_run/"):
+                             cur_path = "logged_data/100_run/",y_lim = None):
     """
     Plot the p value vs the number of evaluations. This allows us to compare multiple cooling schemes or the effects of force.
     x = p-value, y = evaluations
@@ -454,5 +455,7 @@ def plot_convergence_pval(fname1, fname2, fname3,
 
     if first_n_iters:
         plt.xlim((1, first_n_iters))
+    if y_lim:
+        plt.ylim(y_lim)
 
     plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
