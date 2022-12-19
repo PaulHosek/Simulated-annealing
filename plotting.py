@@ -82,7 +82,8 @@ def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length
 # Convergence plotting functions
 # ==============================
 
-def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True, plot_raw_data=False, plot_final_state = True):
+def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True,
+                     plot_raw_data=False, plot_final_state = True,plot_std=False):
     """
     Plot convergence for single run, temperature and final configuration in single plot and save as svg.
     @param fname: file name for the energies
@@ -119,12 +120,14 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
 
 
     # calculate mean and 95% ci for temperature level
-    stats = res_df.groupby(['Temperatures']).agg(['mean' ,'sem'])
+    stats = res_df.groupby(['Temperatures']).agg(['mean','std','sem'])
     # print(stats['mean'])
     x_iters = stats["Iterations"]['mean']
     stats = stats["Potential_energy"]
-    stats['ci95_hi'] = stats['mean'] + 3.291 * stats['sem']
-    stats['ci95_lo'] = stats['mean'] - 3.291 * stats['sem']
+    stats['ci95_hi'] = stats['mean'] + 1.96 * stats['sem']
+    stats['ci95_lo'] = stats['mean'] - 1.96 * stats['sem']
+    stats['std_hi'] = stats['mean'] + stats['std']
+    stats['std_lo'] = stats['mean'] - stats['std']
     stats = stats.iloc[::-1]
 
     # draw
@@ -140,6 +143,12 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
                      color='black',alpha=0.15,label='Raw energy')
     sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_hi'], sort=False, color='cornflowerblue', linestyle='--', label='95% CI')
     sns.lineplot(ax=ax1, x=x_iters, y=stats['ci95_lo'], sort=False, color='cornflowerblue', linestyle='--')
+    if plot_std:
+        sns.lineplot(ax=ax1, x=x_iters, y=stats['std_hi'], sort=False, color='white',alpha=0, linestyle='--')
+        sns.lineplot(ax=ax1, x=x_iters, y=stats['std_lo'], sort=False, color='white',alpha=0, linestyle='--')
+        ax1.fill_between(x_iters[::-1], stats['mean'], stats['std_hi'], color='black', alpha=0.15)
+        ax1.fill_between(x_iters[::-1], stats['mean'], stats['std_lo'], color='black', alpha=0.15,label='±Standard deviation')
+
     ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_hi'], color='cornflowerblue', alpha=0.5)
     ax1.fill_between(x_iters[::-1], stats['mean'], stats['ci95_lo'], color='cornflowerblue', alpha=0.5)
     if plot_points:
