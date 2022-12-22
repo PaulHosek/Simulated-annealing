@@ -284,7 +284,7 @@ def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force'
         # draw main convergence data, CI and means
         # plot raw data
         ax1 = sns.lineplot(x=res_df["Iterations"], y=res_df["Potential_energy"],
-                     color=colors[idx], alpha=0.8, label=names[idx])
+                     color=colors[idx], alpha=0.5, label=names[idx])
 
 
 
