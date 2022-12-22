@@ -83,7 +83,7 @@ def animate_convergence(ch, low_temp, high_temp, n_temps, schedule, chain_length
 # ==============================
 
 def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True,
-                     plot_raw_data=False, plot_final_state = True,plot_std=False):
+                     plot_raw_data=False, plot_final_state = True,plot_std=False,folder='logged_data'):
     """
     Plot convergence for single run, temperature and final configuration in single plot and save as svg.
     @param fname: file name for the energies
@@ -95,8 +95,8 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
     if not pic_name:
         pic_name = fname
     particles_fname = "final_particles_" + fname + '.csv'
-    final_config = np.loadtxt('logged_data/' + particles_fname, delimiter=',')
-    res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
+    final_config = np.loadtxt(f'{folder}/' + particles_fname, delimiter=',')
+    res_df = pd.read_csv(f"{folder}/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
 
 
     # plotting.plot_points(my_charge.particles)
@@ -131,7 +131,7 @@ def plot_convergence(fname,pic_name=None, first_n_iters=None, plot_points = True
     stats = stats.iloc[::-1]
 
     # draw
-    fax1 = plt.figure(figsize=(12, 8))
+    fax1 = plt.figure(figsize=(12*0.9, 8*0.9))
     sns.set_theme(style="whitegrid")
     sns.set_context("notebook", font_scale=1.5)
 
