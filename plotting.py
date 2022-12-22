@@ -259,7 +259,7 @@ def plot_convergence_force(fname1, fname2, fname3,schedule, names=('no force','f
 
 def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force','full force', "late force"),
                            pic_name='no_force', first_n_iters=None,
-                           plot_temp = False):
+                           plot_temp = False,folder='logged_data'):
     """
     Compare no force, full force and late force in single plot
     @param fname1,fname2,fname3: file name for the energies for the 3 force variants
@@ -268,7 +268,7 @@ def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force'
     @param plot_points: if plot the mean energy as additional scatterpoints over the curve
     """
     # draw
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(12*0.8, 8*0.8))
     sns.set_theme(style="whitegrid")
     sns.set_context("notebook", font_scale=1.5)
 
@@ -278,8 +278,8 @@ def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force'
 
         # get data
         particles_fname = "final_particles_" + fname + '.csv'
-        final_config = np.loadtxt('logged_data/' + particles_fname, delimiter=',')
-        res_df = pd.read_csv(f"logged_data/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
+        final_config = np.loadtxt(f'{folder}/' + particles_fname, delimiter=',')
+        res_df = pd.read_csv(f"{folder}/{fname}.csv", skiprows=[1]).rename(columns={"Unnamed: 0": "Iterations"})
 
         # draw main convergence data, CI and means
         # plot raw data
@@ -304,7 +304,7 @@ def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force'
         lines2, labels2 = ax2.get_legend_handles_labels()
         lines += lines2
         labels += labels2
-        ax1.set_ylabel("Temperature")
+        ax2.set_ylabel("Temperature")
 
 
     leg = ax1.legend(lines, labels, loc='upper right', framealpha=1, prop={'size': 14})
@@ -317,9 +317,6 @@ def plot_convergence_only_raw(fname1, fname2, fname3,schedule, names=('no force'
 
     if first_n_iters:
         plt.xlim((1, first_n_iters))
-    plt.text(ax1.get_xlim()[1]*0.5, ax1.get_ylim()[1]*0.95, f'Cooling schedule: {schedule}', style='italic',
-            bbox={'facecolor':'white','edgecolor': 'black', 'alpha': 1, 'pad': 10}
-             ,horizontalalignment='center', verticalalignment='center')
 
     plt.savefig('Images/' + pic_name + ".svg", dpi=300, bbox_inches='tight')
 
