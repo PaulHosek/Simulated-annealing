@@ -394,7 +394,7 @@ def plot_convergence_compare(fname1, fname2, fname3,schedule,
 def plot_convergence_pval(fname1, fname2, fname3,
                              names=('no force','full force', "late force"),
                              pic_name='no_force', first_n_iters=None,
-                             cur_path = "logged_data/100_run/",y_lim = None):
+                             cur_path = "logged_data/100_run/",y_lim = None,leg_loc='best'):
     """
     Plot the p value vs the number of evaluations. This allows us to compare multiple cooling schemes or the effects of force.
     x = p-value, y = evaluations
@@ -455,7 +455,7 @@ def plot_convergence_pval(fname1, fname2, fname3,
     ax1.axhline(0.05,label=r'$\alpha$ of 0.05', color='black',linestyle='--')
     ax1.set(yscale="log")
     lines, labels = ax1.get_legend_handles_labels()
-    leg = ax1.legend(lines, labels, loc='best', framealpha=1, prop={'size': 14})
+    leg = ax1.legend(lines, labels, loc=leg_loc, framealpha=1, prop={'size': 14})
     leg.get_frame().set_edgecolor('black')
 
     ax1.set_ylabel(r"p-value")
@@ -463,7 +463,7 @@ def plot_convergence_pval(fname1, fname2, fname3,
 
 
     if first_n_iters:
-        plt.xlim((1, first_n_iters))
+        plt.xlim((-100, first_n_iters))
     if y_lim:
         plt.ylim(y_lim)
 
