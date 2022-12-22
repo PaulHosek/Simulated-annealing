@@ -340,7 +340,7 @@ def plot_convergence_compare(fname1, fname2, fname3,schedule,
     @param plot_points: if plot the mean energy as additional scatterpoints over the curve
     """
     # draw
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(12*0.8, 8*0.8))
     sns.set_theme(style="whitegrid")
     sns.set_context("notebook", font_scale=1.5)
 
@@ -404,7 +404,7 @@ def plot_convergence_pval(fname1, fname2, fname3,
     @param plot_points: if plot the mean energy as additional scatterpoints over the curve
     """
     # draw
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(12*0.8, 8*0.8))
     sns.set_theme(style="whitegrid")
     sns.set_context("notebook", font_scale=1.5)
 
