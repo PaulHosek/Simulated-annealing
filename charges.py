@@ -39,6 +39,18 @@ class Charges():
 
         return np.array(points)
 
+    def set_points(self, config):
+        """ Set the current configuration to a self selected one
+        """
+        if len(config) == self.n_particles:
+            # for p in config:
+            #     if self.check_in_circle(p) == 0:
+            #         return 2
+            self.particles = config
+            return 1
+        else:
+            return 0
+
     def evaluate_configuration(self):
         """ Calculate the total energy of the current configuration
         """
