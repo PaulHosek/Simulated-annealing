@@ -36,6 +36,8 @@ The authors hope this will simplify review of the codebase at later points in ti
 |Final Notebook | Named "MarcelvandeLagemaat_10886699_PaulHosek_12637033_1.ipynb". This notebook aggregates all the rest of the respository.|
 |charges.py| Contains the charges class. This includes all code relevant to simulate various scenarios.|
 |plotting.py| Contains the functions to produce the plots in the report.|
+|magic.py| Contains the optimal configurations for magic numbers used in the final notebook|
+|markov.py| Contains the results for the Markov chain length convergence used in the final notebook.|
 |Legacy (Directory)| Contains functions no longer in use. This includes drafting spaces and functions that have been revised since.|
 |Images (Directory)| Contains all plot and visualisations relevant for the report and the final notebook|
 |logged_data (Directory| Contains all data logged to produce plots. Data is sorted into relevant categories named accordingly.|
