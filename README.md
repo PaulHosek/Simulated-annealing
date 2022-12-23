@@ -2,8 +2,9 @@
 
 <p align="center">
   <img src="/Images/forces_12.png" />
+  <figcaption>Visualisation of the forces in the optimal state for 12 particles.</figcaption>
 </p>
-### Visualisation of the forces in the optimal state for 12 particles.
+
 
 ## Contributors:
 
@@ -43,5 +44,5 @@ The authors hope this will simplify review of the codebase at later points in ti
 
 <p align="center">
   <img src="/Images/final/wavy_variance_evenspacing.svg" />
+  <figcaption>An example convergence chart.</figcaption>
 </p>
-### An example convergence chart.
