@@ -275,14 +275,15 @@ class Charges():
         return self.particles
 
     def iterate_SA_markovergence(self, low_temp, high_temp, n_temps, schedule, chain_length, cv, force=0):
+        nr_eval = n_temps * self.n_particles * chain_length
         if force == 0:
-            forcelist = np.zeros(n_temps)
+            forcelist = np.zeros(nr_eval)
         elif force == 1:
-            forcelist = np.ones(n_temps)
+            forcelist = np.ones(nr_eval)
         elif force == 2:
-            forcelist = np.append(np.zeros(int(n_temps*0.75)), (np.ones(int(n_temps*0.25))))
+            forcelist = np.append(np.zeros(int(nr_eval*0.75)), (np.ones(int(nr_eval*0.25))))
         else:
-            forcelist = np.tile(np.append(np.zeros(int(chain_length/2)), np.ones(int(chain_length/2))), n_temps)
+            forcelist = np.tile(np.append(np.zeros(int(chain_length/2)), np.ones(int(chain_length/2))), nr_eval)
 
         # save potential energy for each iteration
         
@@ -301,10 +302,11 @@ class Charges():
             for chain_index in range(chain_length):
                 for p in range(self.n_particles):
                     # all_energies[p_idx] = self.pot_energy
-                    self.do_SA_step(p, cur_temp, forcelist[cur_temp])
+                    self.do_SA_step(p, cur_temp, forcelist[p_idx])
                     p_idx += 1
-                if self.evaluate_configuration() <= cv:
-                    return cur_temp, chain_index
+                    if self.pot_energy <= cv:
+                        return p_idx
+        return p_idx
 
     def total_force_on_particle(self, p):
         F = np.zeros(2)
