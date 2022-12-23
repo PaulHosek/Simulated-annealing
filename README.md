@@ -1,7 +1,7 @@
 # Finding The Minimal Energy Configuration Of Charge Particle Within A Circle with Simulated Annealing 
 
 
-|![Particle configuration with foreces](/Images/forces_12.png) |![Example chart.](/Images/final/wavy_variance_evenspacing.svg)|
+![Particle configuration with foreces](/Images/forces_12.png)
 
 ## Contributors:
 
@@ -36,3 +36,5 @@ The authors hope this will simplify review of the codebase at later points in ti
 |Legacy (Directory)| Contains functions no longer in use. This includes drafting spaces and functions that have been revised since.|
 |Images (Directory)| Contains all plot and visualisations relevant for the report and the final notebook|
 |logged_data (Directory| Contains all data logged to produce plots. Data is sorted into relevant categories named accordingly.|
+
+![Example convergence.](/Images/final/wavy_variance_evenspacing.svg)
