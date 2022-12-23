@@ -1,6 +1,7 @@
 # Finding The Minimal Energy Configuration Of Charge Particle Within A Circle with Simulated Annealing 
 
-![Example chart.](/Images/forces.png)
+
+|![Particle configuration with foreces](/Images/forces_12.png) |![Example chart.](/Images/final/wavy_variance_evenspacing.svg)|
 
 ## Contributors:
 
