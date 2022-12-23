@@ -142,6 +142,11 @@ class Charges():
                 theta = theta_part - step
         new = np.array([bounce * np.cos(theta), bounce * np.sin(theta)])
         self.particles[p] = new
+    
+    def move_particle_to_point(self, p, point):
+        """ Move particle p to a self selected point
+        """
+        self.particles[p] = point
 
     def move_particle_random_new(self, p):
         rng = np.random.default_rng(None)
@@ -267,6 +272,38 @@ class Charges():
 
         self.write_data(schedule, all_temps, chain_length, all_energies, force, wavy)
         return self.particles
+
+    def iterate_SA_markovergence(self, low_temp, high_temp, n_temps, schedule, chain_length, cv, force=0):
+        if force == 0:
+            forcelist = np.zeros(n_temps)
+        elif force == 1:
+            forcelist = np.ones(n_temps)
+        elif force == 2:
+            forcelist = np.append(np.zeros(int(n_temps*0.75)), (np.ones(int(n_temps*0.25))))
+        else:
+            forcelist = np.tile(np.append(np.zeros(int(chain_length/2)), np.ones(int(chain_length/2))), n_temps)
+
+        # save potential energy for each iteration
+        
+        if low_temp == 0:
+            low_temp += 0.01
+
+        all_temps = self.generate_temperature_list(low_temp, high_temp,
+                                                   n_temps, schedule, False)
+
+        # all_energies = np.empty(n_temps * self.n_particles * chain_length)
+        p_idx = 0
+        temp_index = 1
+        for cur_temp in all_temps:
+            print(f"Iteration {temp_index}/{n_temps} at {cur_temp} degrees", end='\r', flush=True)
+            temp_index += 1
+            for chain_index in range(chain_length):
+                for p in range(self.n_particles):
+                    # all_energies[p_idx] = self.pot_energy
+                    self.do_SA_step(p, cur_temp, forcelist[cur_temp])
+                    p_idx += 1
+                if self.evaluate_configuration() <= cv:
+                    return cur_temp, chain_index
 
     def total_force_on_particle(self, p):
         F = np.zeros(2)
