@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="/Images/forces_12.png" />
+  <img src="/Images/forces12.png" />
   <figcaption>Visualisation of the forces in the optimal state for 12 particles.</figcaption>
 </p>
 
