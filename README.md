@@ -1,10 +1,15 @@
 # Finding The Minimal Energy Configuration Of Charge Particle Within A Circle with Simulated Annealing 
 
-<p align="center">
-  <img src="/Images/forces_12.png" />
-  <figcaption>Visualisation of the forces in the optimal state for 12 particles.</figcaption>
-</p>
 
+<div style="align: left; text-align:center;">
+    <img src="Images/forces_12.png" height="31px" width="200px" />
+    <div class="caption">Visualisation of the forces in the optimal state for 12 particles.</div>
+</div>
+
+.caption {
+    width: 200px;
+    text-align: center;
+}
 
 ## Contributors:
 
